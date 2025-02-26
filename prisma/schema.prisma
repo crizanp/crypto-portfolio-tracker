@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  password       String
+  name           String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  portfolioItems PortfolioItem[]
+  transactions   Transaction[]
+}
+
+model PortfolioItem {
+  id            String        @id @default(uuid())
+  userId        String
+  symbol        String
+  assetName     String
+  averageBuyPrice Float
+  totalHoldings Float
+  units         Float
+  exitPrice     Float?
+  user          User          @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([userId, symbol])
+}
+
+model Transaction {
+  id             String        @id @default(uuid())
+  userId         String
+  portfolioItemId String
+  type           String        // BUY, SELL
+  price          Float
+  units          Float
+  totalAmount    Float
+  timestamp      DateTime      @default(now())
+  user           User          @relation(fields: [userId], references: [id])
+  portfolioItem  PortfolioItem @relation(fields: [portfolioItemId], references: [id])
+}
