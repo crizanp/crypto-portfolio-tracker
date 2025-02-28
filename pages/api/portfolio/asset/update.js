@@ -3,12 +3,12 @@ import Portfolio from '../../../../models/Portfolio';
 import authenticate from '../../../../middleware/authenticate';
 
 async function handler(req, res) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'PUT') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
   try {
-    const { portfolioId, asset } = req.body;
+    const { portfolioId, assetId, updates } = req.body;
     
     // Find portfolio by ID
     const portfolio = await Portfolio.findById(portfolioId);
@@ -22,8 +22,19 @@ async function handler(req, res) {
       return res.status(401).json({ success: false, message: 'Not authorized to update this portfolio' });
     }
     
-    // Add new asset to portfolio
-    portfolio.assets.push(asset);
+    // Find asset in portfolio
+    const assetIndex = portfolio.assets.findIndex(asset => asset._id.toString() === assetId);
+    
+    if (assetIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Asset not found in portfolio' });
+    }
+    
+    // Update asset
+    Object.keys(updates).forEach(key => {
+      portfolio.assets[assetIndex][key] = updates[key];
+    });
+    
+    portfolio.assets[assetIndex].lastUpdated = Date.now();
     
     // Save updated portfolio
     await portfolio.save();
@@ -33,7 +44,7 @@ async function handler(req, res) {
       data: portfolio,
     });
   } catch (error) {
-    console.error('Add asset error:', error);
+    console.error('Update asset error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 }

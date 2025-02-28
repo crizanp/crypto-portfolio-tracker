@@ -3,12 +3,12 @@ import Portfolio from '../../../../models/Portfolio';
 import authenticate from '../../../../middleware/authenticate';
 
 async function handler(req, res) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'DELETE') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
   try {
-    const { portfolioId, asset } = req.body;
+    const { portfolioId, assetId } = req.query;
     
     // Find portfolio by ID
     const portfolio = await Portfolio.findById(portfolioId);
@@ -22,8 +22,8 @@ async function handler(req, res) {
       return res.status(401).json({ success: false, message: 'Not authorized to update this portfolio' });
     }
     
-    // Add new asset to portfolio
-    portfolio.assets.push(asset);
+    // Remove asset from portfolio
+    portfolio.assets = portfolio.assets.filter(asset => asset._id.toString() !== assetId);
     
     // Save updated portfolio
     await portfolio.save();
@@ -33,7 +33,7 @@ async function handler(req, res) {
       data: portfolio,
     });
   } catch (error) {
-    console.error('Add asset error:', error);
+    console.error('Delete asset error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 }
