@@ -6,8 +6,11 @@ import Card from '../components/ui/Card';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const auth = useAuth();
   const router = useRouter();
+  
+  // Call isAuthenticated as a function
+  const isAuthenticated = auth.isAuthenticated();
 
   useEffect(() => {
     if (isAuthenticated) {

@@ -10,9 +10,11 @@ const api = axios.create({
 // Intercept requests to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -25,9 +27,9 @@ api.interceptors.response.use(
   (error) => {
     // Handle 401 Unauthorized - redirect to login
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
       if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     }
@@ -44,10 +46,35 @@ const setAuthToken = (token) => {
   }
 };
 
+// API Functions
+const fetchPortfolios = async () => {
+  try {
+    const response = await api.get('/api/portfolios');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching portfolios:', error);
+    throw error;
+  }
+};
+
+const updatePrices = async (portfolioId) => {
+  try {
+    const response = await api.post(`/api/portfolios/${portfolioId}/update-prices`);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating prices:', error);
+    throw error;
+  }
+};
+
+export { fetchPortfolios, updatePrices };
+
 export default {
   get: api.get,
   post: api.post,
   put: api.put,
   delete: api.delete,
   setAuthToken,
+  fetchPortfolios,
+  updatePrices
 };

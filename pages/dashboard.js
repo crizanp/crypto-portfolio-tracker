@@ -6,11 +6,13 @@ import Card from '../components/ui/Card';
 import PortfolioSummary from '../components/portfolio/PortfolioSummary';
 import PriceChart from '../components/portfolio/PriceChart';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchPortfolios, updatePrices } from '../utils/api';
+import api from '../utils/api';
 import { formatCurrency } from '../utils/formatters';
 
 export default function Dashboard() {
-  const { isAuthenticated, user, loading } = useAuth();
+  const auth = useAuth();
+  const isAuthenticated = auth.isAuthenticated();
+  const { user, loading } = auth;
   const router = useRouter();
   
   const [portfolios, setPortfolios] = useState([]);
@@ -27,8 +29,8 @@ export default function Dashboard() {
     const getPortfolios = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchPortfolios();
-        setPortfolios(data);
+        const response = await api.get('/api/portfolios');
+        setPortfolios(response.data);
         setIsLoading(false);
       } catch (err) {
         setError('Failed to load portfolios');
@@ -44,9 +46,9 @@ export default function Dashboard() {
   const handleUpdatePrices = async (portfolioId) => {
     try {
       setIsLoading(true);
-      await updatePrices(portfolioId);
-      const updatedPortfolios = await fetchPortfolios();
-      setPortfolios(updatedPortfolios);
+      await api.post(`/api/portfolios/${portfolioId}/update-prices`);
+      const response = await api.get('/api/portfolios');
+      setPortfolios(response.data);
       setIsLoading(false);
     } catch (err) {
       setError('Failed to update prices');
